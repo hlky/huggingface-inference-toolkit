@@ -114,11 +114,14 @@ async def predict(request):
         accept = request.headers.get("accept", None)
         if accept is None or accept == "*/*":
             accept = "application/json"
-        # deserialized and resonds with json
-        serialized_response_body = ContentType.get_serializer(accept).serialize(
-            pred, accept
-        )
-        return Response(serialized_response_body, media_type=accept)
+        serializer = ContentType.get_serializer(accept)
+        if serializer:
+            response_body = serializer.serialize(
+                pred, accept
+            )
+        else:
+            response_body = pred
+        return Response(response_body, media_type=accept)
     except Exception as e:
         logger.error(e)
         return Response(
