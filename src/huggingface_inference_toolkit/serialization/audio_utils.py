@@ -1,6 +1,6 @@
 class Audioer:
     @staticmethod
-    def deserialize(body):
+    def deserialize(body, query=None):
         return {"inputs": bytes(body)}
 
     @staticmethod

@@ -4,6 +4,7 @@ from time import perf_counter
 
 import orjson
 from starlette.applications import Starlette
+from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 from starlette.routing import Route
 
@@ -24,7 +25,7 @@ from huggingface_inference_toolkit.serialization.base import ContentType
 from huggingface_inference_toolkit.serialization.json_utils import Jsoner
 from huggingface_inference_toolkit.utils import (
     _load_repository_from_hf,
-    convert_params_to_int_or_bool,
+    convert_request_query_params_to_int_or_bool,
 )
 from huggingface_inference_toolkit.vertex_ai_utils import _load_repository_from_gcs
 
@@ -81,25 +82,30 @@ async def metrics(request):
     )
 
 
-async def predict(request):
+async def predict(request: Request):
     try:
+        query_parameters = convert_request_query_params_to_int_or_bool(request)
         # extracts content from request
         content_type = request.headers.get("content-Type", None)
         # try to deserialize payload
-        deserialized_body = ContentType.get_deserializer(content_type).deserialize(
-            await request.body()
-        )
+        body = await request.body()
+        deserializer = ContentType.get_deserializer(content_type)
+        if deserializer:
+            deserialized_body = deserializer.deserialize(body, query_parameters)
+        else:
+            deserialized_body = body
+
         # checks if input schema is correct
-        if "inputs" not in deserialized_body and "instances" not in deserialized_body:
+        if isinstance(deserialized_body, dict) and "inputs" not in deserialized_body and "instances" not in deserialized_body:
             raise ValueError(
                 f"Body needs to provide a inputs key, received: {orjson.dumps(deserialized_body)}"
             )
 
         # check for query parameter and add them to the body
-        if request.query_params and "parameters" not in deserialized_body:
-            deserialized_body["parameters"] = convert_params_to_int_or_bool(
-                dict(request.query_params)
-            )
+        if isinstance(deserialized_body, dict) and request.query_params and "parameters" not in deserialized_body:
+            deserialized_body["parameters"] = query_parameters
+        else:
+            deserialized_body = {"inputs": deserialized_body, "parameters": query_parameters}
 
         # tracks request time
         start_time = perf_counter()
@@ -116,16 +122,17 @@ async def predict(request):
             accept = "application/json"
         serializer = ContentType.get_serializer(accept)
         if serializer:
-            response_body = serializer.serialize(
+            response_body, headers = serializer.serialize(
                 pred, accept
             )
         else:
             response_body = pred
-        return Response(response_body, media_type=accept)
+            headers = {}
+        return Response(response_body, media_type=accept, headers=headers)
     except Exception as e:
         logger.error(e)
         return Response(
-            Jsoner.serialize({"error": str(e)}),
+            Jsoner.serialize({"error": str(e)})[0],
             status_code=400,
             media_type="application/json",
         )

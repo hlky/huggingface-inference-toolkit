@@ -1,6 +1,7 @@
 from huggingface_inference_toolkit.serialization.audio_utils import Audioer
 from huggingface_inference_toolkit.serialization.image_utils import Imager
 from huggingface_inference_toolkit.serialization.json_utils import Jsoner
+from huggingface_inference_toolkit.serialization.tensor_utils import TensorBinary, TensorBase64
 
 content_type_mapping = {
     "application/json": Jsoner,
@@ -34,6 +35,9 @@ content_type_mapping = {
     "audio/AMR-WB+": Audioer,
     "audio/m4a": Audioer,
     "audio/x-m4a": Audioer,
+    # custom
+    "tensor/binary": TensorBinary,
+    "tensor/base64": TensorBase64,
 }
 
 

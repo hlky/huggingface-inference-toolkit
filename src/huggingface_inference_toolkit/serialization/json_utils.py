@@ -16,12 +16,12 @@ def default(obj):
 
 class Jsoner:
     @staticmethod
-    def deserialize(body):
+    def deserialize(body, query=None):
         return orjson.loads(body)
 
     @staticmethod
     def serialize(body, accept=None):
-        return orjson.dumps(body, option=orjson.OPT_SERIALIZE_NUMPY, default=default)
+        return orjson.dumps(body, option=orjson.OPT_SERIALIZE_NUMPY, default=default), {}
 
 
 # class _JSONEncoder(json.JSONEncoder):

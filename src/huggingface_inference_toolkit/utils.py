@@ -259,6 +259,22 @@ def get_pipeline(
         )
     return hf_pipeline  # type: ignore
 
+def convert_request_query_params_to_int_or_bool(request):
+    """Converts query params to int, bool, or list if possible"""
+    params = {}
+    
+    for k in request.query_params:
+        values = [
+            int(v) if v.isnumeric() else
+            False if v.lower() == "false" else
+            True if v.lower() == "true" else
+            v
+            for v in request.query_params.getlist(k)
+        ]
+        params[k] = values if len(values) > 1 else values[0]
+    
+    return params
+
 
 def convert_params_to_int_or_bool(params):
     """Converts query params to int or bool if possible"""
@@ -269,4 +285,3 @@ def convert_params_to_int_or_bool(params):
             params[k] = False
         if v == "true":
             params[k] = True
-    return params
