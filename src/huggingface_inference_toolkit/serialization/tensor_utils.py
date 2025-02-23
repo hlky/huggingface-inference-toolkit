@@ -45,7 +45,6 @@ class TensorBase64:
     @staticmethod
     def deserialize(body, query):
         data = orjson.loads(body)
-        print(data.keys())
         if "inputs" not in data:
             raise ValueError("Expected `inputs` in data.")
         inputs = base64.b64decode(data["inputs"])

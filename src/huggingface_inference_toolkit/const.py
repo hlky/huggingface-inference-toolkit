@@ -3,7 +3,7 @@ from pathlib import Path
 
 from huggingface_inference_toolkit.env_utils import strtobool
 
-HF_MODEL_DIR = os.environ.get("HF_MODEL_DIR", "/opt/huggingface/model")
+HF_MODEL_DIR = os.environ.get("HF_MODEL_DIR", "/repository")
 HF_MODEL_ID = os.environ.get("HF_MODEL_ID", None)
 HF_TASK = os.environ.get("HF_TASK", None)
 HF_FRAMEWORK = os.environ.get("HF_FRAMEWORK", None)
